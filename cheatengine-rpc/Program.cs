@@ -24,11 +24,17 @@ namespace cheatengine_rpc
 
         int Update()
         {
-            string process = sdk.lua.ToString(-2) ?? "nothing";
-            string path = Path.GetFileName(sdk.lua.ToString(-1));
+            string process = sdk.lua.ToString(-4) ?? "nothing";
+            string path = Path.GetFileName(sdk.lua.ToString(-3));
+            string ceversion = sdk.lua.ToString(-2);
+            string addresslist = sdk.lua.ToNumber(-1).ToString();
+
+            rpcAssets.LargeImageText = "CE Version: " + ceversion;
+            rpcAssets.SmallImageText = "Address List : " + addresslist;
             
             rpc.Details = "Attaching " + process;
             rpc.State = "CT: " + path;
+            rpc.Assets = rpcAssets;
 
             drc.SetPresence(rpc);
             return 1;
@@ -36,24 +42,28 @@ namespace cheatengine_rpc
         
         DiscordRpcClient drc;
         RichPresence rpc;
+        Assets rpcAssets;
 
         public override bool EnablePlugin()
         {
             sdk.lua.Register("UpdateRPC", Update);
 
+            drc = new DiscordRpcClient("739213592410456136");
+            drc.Initialize();
+
             rpc = new RichPresence();
             rpc.Details = "Just opened";
-            rpc.Assets = new Assets()
-            {
-                LargeImageKey = "ce2"
-            };
+
             rpc.Timestamps = new Timestamps()
             {
                 StartUnixMilliseconds = (ulong)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalMilliseconds
             };
 
-            drc = new DiscordRpcClient("739213592410456136");
-            drc.Initialize();
+            rpcAssets = new Assets()
+            {
+                LargeImageKey = "ce2",
+                SmallImageKey = "ce2",
+            };
 
             Timer tmr = new Timer();
             tmr.Enabled = true;
@@ -73,7 +83,9 @@ UpdateRPC(
     MainForm.OpenDialog1.filename or
   (MainForm.SaveDialog1.filename and MainForm.SaveDialog1.filename:find(':')) and 
     MainForm.SaveDialog1.filename or
-  'None'
+  'None',
+  tostring(getCEVersion()),
+  getAddressList().count
 )");
         }
     }
